@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GAINZ — Personalized Workout & Diet Planner</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════ AI LOADING OVERLAY ═══════════════ -->
+  <div class="ai-overlay" id="ai-overlay">
+    <div class="ai-ring-wrap">
+      <div class="ai-ring"></div>
+      <div class="ai-ring-2"></div>
+      <div class="ai-dot"></div>
+    </div>
+    <div>
+      <div class="ai-msg" id="ai-msg">Analyzing your profile…</div>
+      <div class="ai-msg-sub" id="ai-msg-sub">GAINZ AI is building your plan</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+
+      <!-- Logo -->
+      <div class="logo">
+        <span class="logo-bolt">⚡</span>
+        <span class="logo-text">GAIN<span class="logo-z">Z</span></span>
+      </div>
+
+      <!-- Nav -->
+      <nav class="header-nav">
+        <a href="#planner" class="nav-link active" data-tab="planner">
+          <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="11" y="2" width="7" height="7" rx="1"/><rect x="2" y="11" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></svg>
+          <span class="nav-txt">PLANNER</span>
+        </a>
+        <a href="#workout" class="nav-link" data-tab="workout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg>
+          <span class="nav-txt">WORKOUT</span>
+        </a>
+        <a href="#diet" class="nav-link" data-tab="diet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2"/></svg>
+          <span class="nav-txt">DIET PLAN</span>
+        </a>
+        <a href="#progress" class="nav-link" data-tab="progress">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span class="nav-txt">PROGRESS</span>
+        </a>
+        <a href="#coach" class="nav-link" data-tab="coach">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.4 8.4 0 0 1-3.8-.9L4 20l1.1-3.6A7.2 7.2 0 0 1 4.5 12 7.5 7.5 0 0 1 12 4.5h.5A7.5 7.5 0 0 1 20 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+          <span class="nav-txt">AI COACH</span>
+        </a>
+        <a href="#insights" class="nav-link" data-tab="insights">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="nav-txt">INSIGHTS</span>
+        </a>
+      </nav>
+
+      <!-- Right controls -->
+      <div class="header-right">
+        <button type="button" class="theme-switch" id="theme-toggle" title="Toggle light / dark mode" aria-label="Toggle light or dark mode">
+          <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+        </button>
+        <button type="button" class="avatar-btn" id="profile-btn" aria-label="Open profile planner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <main class="app-main">
+
+    <!-- ══ TAB: PLANNER ══ -->
+    <section id="tab-planner" class="tab-section active">
+
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-slash left">/</div>
+        <h1><span class="hero-white">YOUR </span><span class="hero-blue">AI-POWERED</span><span class="hero-white"> FITNESS COMPANION</span></h1>
+        <div class="hero-slash right">/</div>
+        <p class="hero-sub">Tell us about yourself — we'll generate a fully personalized<br>workout &amp; meal plan tailored to your lifestyle, culture, and budget.</p>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="step-bar">
+        <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">PROFILE</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">GOALS</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">PREFERENCES</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">REVIEW</span></div>
+      </div>
+
+      <!-- Form card -->
+      <form id="profile-form" class="form-card">
+
+        <!-- Step 1 — Profile -->
+        <div class="form-step" id="step-1">
+          <div class="form-card-head">
+            <div class="form-card-title-row">
+              <div class="form-icon-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              </div>
+              <div>
+                <h2 class="form-card-title">BUILD YOUR PROFILE</h2>
+                <p class="form-card-sub">This helps our AI personalize everything for you.</p>
+              </div>
+            </div>
+            <div class="privacy-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Your data is <strong>100% private</strong>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field-group">
+              <label for="name">FULL NAME</label>
+              <div class="input-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                <input id="name" type="text" placeholder="e.g. Carl Johnson" required />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="age">AGE</label>
+              <div class="input-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <input id="age" type="number" placeholder="18" min="13" max="35" required />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="gender">GENDER</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="4"/><path d="M12 14v6M9 17h6"/><path d="M16 6l2-2M18 4h-2M18 4v2"/></svg>
+                <select id="gender" required>
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other / Prefer not to say</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="weight">WEIGHT (KG)</label>
+              <div class="input-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M8 6V4a4 4 0 018 0v2"/></svg>
+                <input id="weight" type="number" placeholder="65" min="30" max="200" required />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="height">HEIGHT (CM)</label>
+              <div class="input-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="9 5 12 2 15 5"/><polyline points="9 19 12 22 15 19"/></svg>
+                <input id="height" type="number" placeholder="170" min="100" max="250" required />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="goal">FITNESS GOAL</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <select id="goal" required>
+                  <option value="">Select your goal</option>
+                  <option value="lose_weight">Lose Weight</option>
+                  <option value="build_muscle">Build Muscle</option>
+                  <option value="maintain">Maintain &amp; Stay Fit</option>
+                  <option value="endurance">Improve Endurance</option>
+                  <option value="flexibility">Increase Flexibility</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-next" id="btn-step1">CONTINUE TO GOALS <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+
+        <!-- Step 2 — Goals -->
+        <div class="form-step hidden" id="step-2">
+          <div class="form-card-head">
+            <div class="form-card-title-row">
+              <div class="form-icon-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <h2 class="form-card-title">ACTIVITY & SCHEDULE</h2>
+                <p class="form-card-sub">Tell us how you train and how often.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field-group">
+              <label>CURRENT ACTIVITY LEVEL</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13" cy="6" r="2"/><path d="M10 22v-6l-2-3 4-5 2 3h3"/><path d="M6 22v-4"/></svg>
+                <select id="activity" required>
+                  <option value="">Select activity level</option>
+                  <option value="sedentary">Sedentary (desk job / mostly sitting)</option>
+                  <option value="light">Light (1–2 days/week exercise)</option>
+                  <option value="moderate">Moderate (3–4 days/week)</option>
+                  <option value="active">Active (5–6 days/week)</option>
+                  <option value="very_active">Very Active (daily intense training)</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>AVAILABLE DAYS PER WEEK</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <select id="schedule" required>
+                  <option value="">Select days</option>
+                  <option value="2">2 days</option>
+                  <option value="3">3 days</option>
+                  <option value="4">4 days</option>
+                  <option value="5">5 days</option>
+                  <option value="6">6 days</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>AVAILABLE EQUIPMENT</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg>
+                <select id="equipment" required>
+                  <option value="">Select equipment</option>
+                  <option value="none">No Equipment (bodyweight only)</option>
+                  <option value="minimal">Minimal (resistance bands, dumbbells)</option>
+                  <option value="home_gym">Home Gym (basic machines)</option>
+                  <option value="full_gym">Full Gym Access</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-back" id="btn-back2">← BACK</button>
+            <button type="button" class="btn-next" id="btn-step2">CONTINUE TO PREFERENCES <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Step 3 — Preferences -->
+        <div class="form-step hidden" id="step-3">
+          <div class="form-card-head">
+            <div class="form-card-title-row">
+              <div class="form-icon-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2"/></svg>
+              </div>
+              <div>
+                <h2 class="form-card-title">FOOD & DIETARY PREFERENCES</h2>
+                <p class="form-card-sub">Personalise meals to your culture and restrictions.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field-group">
+              <label>FOOD / CULTURAL PREFERENCE</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+                <select id="cuisine" required>
+                  <option value="">Select preference</option>
+                  <option value="south_asian">South Asian (Indian, Pakistani, Bangladeshi)</option>
+                  <option value="east_asian">East Asian (Chinese, Japanese, Korean)</option>
+                  <option value="middle_eastern">Middle Eastern / Arabic</option>
+                  <option value="african">African / Caribbean</option>
+                  <option value="latin">Latin American / Hispanic</option>
+                  <option value="western">Western / European</option>
+                  <option value="mediterranean">Mediterranean</option>
+                  <option value="mixed">No Preference / Mixed</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>DIETARY RESTRICTION</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                <select id="diet_type" required>
+                  <option value="">Select restriction</option>
+                  <option value="none">None</option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="vegan">Vegan</option>
+                  <option value="halal">Halal</option>
+                  <option value="gluten_free">Gluten-Free</option>
+                  <option value="lactose_free">Lactose-Free</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>WEEKLY FOOD BUDGET</label>
+              <div class="input-wrap select-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                <select id="budget" required>
+                  <option value="">Select budget</option>
+                  <option value="low">Low (&lt; $30 / week)</option>
+                  <option value="medium">Medium ($30–$70 / week)</option>
+                  <option value="high">High ($70+ / week)</option>
+                </select>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="field-group full-width">
+              <label>ANY HEALTH CONDITIONS / NOTES (OPTIONAL)</label>
+              <div class="input-wrap textarea-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                <textarea id="health_notes" rows="2" placeholder="e.g. bad knees, lower back pain, asthma…" maxlength="200"></textarea>
+                <span class="char-count" id="char-count">0/200</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-back" id="btn-back3">← BACK</button>
+            <button type="button" class="btn-next" id="btn-step3">REVIEW MY PLAN <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Step 4 — Review & Generate -->
+        <div class="form-step hidden" id="step-4">
+          <div class="form-card-head">
+            <div class="form-card-title-row">
+              <div class="form-icon-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <h2 class="form-card-title">REVIEW YOUR PROFILE</h2>
+                <p class="form-card-sub">Everything look good? Generate your personalised plan.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="review-grid" class="review-grid"></div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-back" id="btn-back4">← BACK</button>
+            <button type="submit" class="btn-generate" id="generate-btn">
+              <span class="btn-text">⚡ GENERATE MY PLAN</span>
+              <span class="btn-loader hidden">Analyzing your profile…</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- ══ TAB: WORKOUT ══ -->
+    <section id="tab-workout" class="tab-section hidden">
+      <div id="workout-output" class="output-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg>
+        <span>Fill in your profile to generate a workout plan.</span>
+      </div>
+    </section>
+
+    <!-- ══ TAB: DIET ══ -->
+    <section id="tab-diet" class="tab-section hidden">
+      <div id="diet-output" class="output-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+        <span>Fill in your profile to generate a meal plan.</span>
+      </div>
+    </section>
+
+    <!-- ══ TAB: PROGRESS ══ -->
+    <section id="tab-progress" class="tab-section hidden">
+      <div class="progress-area card">
+        <h2>📈 Progress Tracker</h2>
+        <p class="muted">Log your daily check-ins to track how far you've come.</p>
+        <div class="progress-form-row">
+          <label class="sr-only" for="log-date">Date</label><input id="log-date"   type="date"   class="prog-input" />
+          <label class="sr-only" for="log-weight">Weight in kilograms</label><input id="log-weight" type="number" class="prog-input" placeholder="Weight (kg)" step="0.1" min="30" max="300" />
+          <label class="sr-only" for="log-note">Progress note</label><input id="log-note"   type="text"   class="prog-input" placeholder="Note (optional)" maxlength="200" />
+          <button id="log-btn" class="btn-log">+ Log</button>
+        </div>
+        <table class="progress-table">
+          <thead><tr><th>Date</th><th>Weight (kg)</th><th>Note</th><th>Δ vs Start</th></tr></thead>
+          <tbody id="progress-body"><tr><td colspan="4" class="muted center">No entries yet.</td></tr></tbody>
+        </table>
+        <div id="weight-chart-wrap" class="chart-wrap hidden">
+          <canvas id="weight-chart" height="200"></canvas>
+        </div>
+        <div class="streak-bar">
+          <span class="streak-label">🔥 Current Streak</span>
+          <span id="streak-count" class="streak-value">0 days</span>
+        </div>
+        <div class="streak-cal-section">
+          <div class="streak-cal-title">Last 30 Days</div>
+          <div id="streak-calendar" class="streak-calendar"></div>
+          <div class="streak-cal-legend">
+            <span class="cal-day logged" style="pointer-events:none"></span> Logged &nbsp;
+            <span class="cal-day today" style="pointer-events:none"></span> Today &nbsp;
+            <span class="cal-day" style="pointer-events:none"></span> Missed
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TAB: AI COACH ══ -->
+    <section id="tab-coach" class="tab-section hidden">
+      <div class="coach-shell card">
+        <div class="coach-head">
+          <div>
+            <div class="coach-kicker">GAINZ AI</div>
+            <h2>AI Fitness Coach</h2>
+            <p class="muted">Ask questions, change exercises, swap meals, or get advice based on your plan and progress.</p>
+          </div>
+          <div class="coach-head-actions"><button type="button" class="coach-test-btn" id="coach-test-btn">Test AI connection</button><span class="coach-status" id="coach-status"><span class="coach-status-dot"></span> Ready</span></div>
+        </div>
+        <div class="coach-suggestions" id="coach-suggestions">
+          <button type="button" class="coach-chip">Make today's workout easier</button>
+          <button type="button" class="coach-chip">Replace an exercise I don't like</button>
+          <button type="button" class="coach-chip">Give me a high-protein meal swap</button>
+          <button type="button" class="coach-chip">How is my progress?</button>
+        </div>
+        <div class="coach-messages" id="coach-messages" aria-live="polite">
+          <div class="coach-message coach-message-ai">
+            <div class="coach-avatar">✦</div>
+            <div><strong>GAINZ AI</strong><p>Generate your plan, then ask me anything about your workout, meals, or progress.</p></div>
+          </div>
+        </div>
+        <form class="coach-input-row" id="coach-form">
+          <textarea id="coach-input" rows="1" maxlength="1200" placeholder="Tell GAINZ what you want to change…" aria-label="Message GAINZ AI"></textarea>
+          <button type="submit" class="btn-generate coach-send" id="coach-send">Send</button>
+        </form>
+        <div class="coach-note">AI suggestions are informational. For injuries, medical conditions, or nutrition treatment, consult a qualified professional.</div>
+      </div>
+    </section>
+
+    <!-- ══ TAB: INSIGHTS ══ -->
+    <section id="tab-insights" class="tab-section hidden">
+      <div id="insights-output" class="output-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Generate a plan first to unlock AI insights.</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════ BOTTOM NAV (mobile only) ═══════════════ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bnav-item active" data-tab="planner">
+      <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="11" y="2" width="7" height="7" rx="1"/><rect x="2" y="11" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></svg>
+      <div class="bnav-dot"></div>
+      Planner
+    </button>
+    <button class="bnav-item" data-tab="workout">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg>
+      <div class="bnav-dot"></div>
+      Workout
+    </button>
+    <button class="bnav-item" data-tab="diet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2"/></svg>
+      <div class="bnav-dot"></div>
+      Diet
+    </button>
+    <button class="bnav-item" data-tab="progress">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <div class="bnav-dot"></div>
+      Progress
+    </button>
+    <button class="bnav-item" data-tab="coach">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.4 8.4 0 0 1-3.8-.9L4 20l1.1-3.6A7.2 7.2 0 0 1 4.5 12 7.5 7.5 0 0 1 12 4.5h.5A7.5 7.5 0 0 1 20 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+      <div class="bnav-dot"></div>
+      AI Coach
+    </button>
+    <button class="bnav-item" data-tab="insights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="bnav-dot"></div>
+      Insights
+    </button>
+  </nav>
+
+  <footer class="site-footer">
+    <p>GAINZ &mdash; Personalized for every student, every culture, every budget.</p>
+  </footer>
+
+  <script src="ai-engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

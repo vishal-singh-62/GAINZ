@@ -1,0 +1,8 @@
+{
+  "name": "gainz-ai-coach",
+  "version": "1.1.0",
+  "private": true,
+  "description": "GAINZ fitness planner with a Gemini-powered AI coach",
+  "scripts": {"start":"node server.js"},
+  "engines": {"node": ">=18"}
+}
