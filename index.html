@@ -8,6 +8,32 @@
 </head>
 <body>
 
+  <!-- Supabase authentication gate -->
+  <section id="auth-gate" class="auth-gate" aria-live="polite">
+    <div class="auth-card">
+      <div class="auth-brand"><span>⚡</span> GAIN<span>Z</span></div>
+      <p class="auth-eyebrow">YOUR PERSONAL FITNESS SPACE</p>
+      <h1 id="auth-title">Welcome back</h1>
+      <p class="auth-subtitle" id="auth-subtitle">Sign in to access your workouts, nutrition and progress.</p>
+      <form id="auth-form" class="auth-form">
+        <label id="auth-name-label" class="hidden" for="auth-name">Full name</label>
+        <input id="auth-name" class="hidden" type="text" autocomplete="name" placeholder="Full name" maxlength="100">
+        <label for="auth-email">Email address</label>
+        <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" autocomplete="current-password" placeholder="At least 8 characters" minlength="8" required>
+        <button id="auth-submit" class="auth-submit" type="submit">Sign in</button>
+      </form>
+      <p id="auth-message" class="auth-message" role="status"></p>
+      <div class="auth-actions">
+        <button type="button" id="auth-toggle" class="auth-link">Create an account</button>
+        <button type="button" id="auth-forgot" class="auth-link">Forgot password?</button>
+      </div>
+      <p class="auth-privacy">Your account and fitness data are protected by Supabase authentication and row-level security.</p>
+    </div>
+  </section>
+
+
   <!-- ═══════════════ AI LOADING OVERLAY ═══════════════ -->
   <div class="ai-overlay" id="ai-overlay">
     <div class="ai-ring-wrap">
@@ -65,6 +91,7 @@
           <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <div class="toggle-track"><div class="toggle-thumb"></div></div>
         </button>
+        <button type="button" class="auth-user-btn hidden" id="auth-user-btn" title="Sign out">SIGN OUT</button>
         <button type="button" class="avatar-btn" id="profile-btn" aria-label="Open profile planner">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </button>
@@ -482,6 +509,9 @@
     <p>GAINZ &mdash; Personalized for every student, every culture, every budget.</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
   <script src="ai-engine.js"></script>
   <script src="app.js"></script>
 </body>

@@ -14,6 +14,7 @@ function escapeHTML(value) {
 
 function saveProfile(profile) {
   try { localStorage.setItem('gainz_profile', JSON.stringify(profile)); } catch (_) {}
+  window.GAINZ_AUTH?.saveProfile?.(profile);
 }
 
 function loadSavedProfile() {
@@ -238,6 +239,7 @@ form.addEventListener('submit', e => {
     const plan = generateFullPlan(profile);
     currentPlan = plan;
     try { localStorage.setItem('gainz_plan', JSON.stringify(plan)); } catch (_) {}
+    window.GAINZ_AUTH?.savePlan?.(plan);
     renderWorkoutTab(plan);
     renderDietTab(plan);
     renderInsightsTab(plan);
@@ -353,6 +355,7 @@ function renderWorkoutTab(plan) {
       const data = JSON.parse(localStorage.getItem('gainz_workouts') || '{}');
       data[key] = { completedAt: new Date().toISOString(), goal: p.goal };
       localStorage.setItem('gainz_workouts', JSON.stringify(data));
+      window.GAINZ_AUTH?.saveWorkoutCompletion?.(key, data[key]);
       completeBtn.classList.add('completed');
       completeBtn.textContent = '✓ WORKOUT COMPLETED';
       updateStreak();
@@ -461,7 +464,10 @@ function initWaterTracker(container, total) {
   const fill      = container.querySelector('#water-fill');
   const countEl   = container.querySelector('#water-count');
   if (!glassWrap) return;
-  const waterKey = `gainz_water_${new Date().toISOString().split('T')[0]}`;
+  // Use the browser's local calendar date (not UTC) so the key matches Supabase's tracking_date in India and other time zones.
+  const today = new Date();
+  const localDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const waterKey = `gainz_water_${localDay}`;
   let filled = Math.min(parseInt(localStorage.getItem(waterKey) || '0', 10) || 0, total);
   function syncWaterUI() {
     glassWrap.querySelectorAll('.glass-btn').forEach((b, i) => {
@@ -501,6 +507,11 @@ function initWaterTracker(container, total) {
     fill.style.width  = pct + '%';
     countEl.textContent = filled;
     fill.style.background = pct >= 100 ? '#00d4aa' : '#3a7eff';
+    try { localStorage.setItem(waterKey, String(filled)); } catch (_) {}
+    // Save locally immediately, then sync the same local date to Supabase.
+    if (window.GAINZ_AUTH?.saveWater) {
+      window.GAINZ_AUTH.saveWater(localDay, filled).catch(err => console.error('GAINZ water sync failed:', err));
+    }
   });
 }
 
@@ -691,7 +702,7 @@ function applyCoachAction(action) {
     for (const day of plan.workoutPlan.plan) {
       if (!day.exercises) continue;
       const idx = day.exercises.findIndex(e => e.name === action.target);
-      if (idx >= 0) { day.exercises[idx] = {...replacement}; currentPlan = plan; renderWorkoutTab(plan); localStorage.setItem('gainz_plan', JSON.stringify(plan)); return `Replaced ${action.target} with ${replacement.name}`; }
+      if (idx >= 0) { day.exercises[idx] = {...replacement}; currentPlan = plan; renderWorkoutTab(plan); localStorage.setItem('gainz_plan', JSON.stringify(plan)); window.GAINZ_AUTH?.savePlan?.(plan); return `Replaced ${action.target} with ${replacement.name}`; }
     }
   }
   if (action.type === 'swap_meal') {
@@ -701,7 +712,7 @@ function applyCoachAction(action) {
     const idx = plan.dietPlan.meals.findIndex(m => m.name === action.target);
     if (idx >= 0) {
       plan.dietPlan.meals[idx] = {...plan.dietPlan.meals[idx], ...replacement, label: plan.dietPlan.meals[idx].label, time: plan.dietPlan.meals[idx].time};
-      currentPlan = plan; renderDietTab(plan); localStorage.setItem('gainz_plan', JSON.stringify(plan)); return `Swapped ${action.target} for ${replacement.name}`;
+      currentPlan = plan; renderDietTab(plan); localStorage.setItem('gainz_plan', JSON.stringify(plan)); window.GAINZ_AUTH?.savePlan?.(plan); return `Swapped ${action.target} for ${replacement.name}`;
     }
   }
   return null;
@@ -895,6 +906,7 @@ document.getElementById('log-btn').addEventListener('click', () => {
   else progressLog.push({ date, weight, note });
   progressLog.sort((a, b) => new Date(a.date) - new Date(b.date));
   localStorage.setItem('gainz_progress', JSON.stringify(progressLog));
+  window.GAINZ_AUTH?.saveProgress?.({ date, weight, note });
 
   document.getElementById('log-weight').value = '';
   document.getElementById('log-note').value   = '';
@@ -1030,15 +1042,43 @@ function updateStreak() {
    INIT
 ══════════════════════════════════════════════════════════ */
 (function init() {
+  // Restore the saved profile into the form.
   const saved = loadSavedProfile();
   if (saved) {
     Object.entries(saved).forEach(([id, value]) => {
       const el = document.getElementById(id);
       if (el && value !== undefined && value !== null) el.value = value;
     });
-    if (healthTA && charCounter) charCounter.textContent = `${healthTA.value.length}/200`;
+    if (healthTA && charCounter) {
+      charCounter.textContent = `${healthTA.value.length}/200`;
+    }
   }
+
+  // Restore the previously generated plan. Saving it was already implemented;
+  // the missing piece was loading it and rendering its tabs when the app starts.
+  try {
+    currentPlan = JSON.parse(localStorage.getItem('gainz_plan') || 'null');
+  } catch (error) {
+    console.warn('GAINZ could not read the saved plan:', error);
+    currentPlan = null;
+  }
+
+  if (currentPlan) {
+    try {
+      if (currentPlan.workoutPlan?.plan && currentPlan.dietPlan?.meals) {
+        renderWorkoutTab(currentPlan);
+        renderDietTab(currentPlan);
+        renderInsightsTab(currentPlan);
+      } else {
+        console.warn('GAINZ found saved plan data, but its structure is incomplete. Generate the plan again to refresh it.');
+      }
+    } catch (error) {
+      console.error('GAINZ could not restore the saved plan:', error);
+    }
+  }
+
   renderProgressTable();
+  renderWeightChart();
   updateStreak();
   renderStreakCalendar();
   goToStep(1);
