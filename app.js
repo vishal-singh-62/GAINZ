@@ -12,6 +12,12 @@ function escapeHTML(value) {
   }[ch]));
 }
 
+/* Local calendar date as YYYY-MM-DD. Do NOT use toISOString() for this: it is UTC,
+   which is a day behind in India between 00:00 and 05:30. */
+function localDateKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function saveProfile(profile) {
   try { localStorage.setItem('gainz_profile', JSON.stringify(profile)); } catch (_) {}
   window.GAINZ_AUTH?.saveProfile?.(profile);
@@ -283,31 +289,31 @@ function renderWorkoutTab(plan) {
       </div>`;
     const exHtml = day.exercises.map((e, i) => `
       <li class="exercise-item" style="animation-delay:${i*0.05}s">
-        <span class="ex-icon">${e.icon}</span>
+        <span class="ex-icon">${escapeHTML(e.icon)}</span>
         <div>
-          <div class="ex-name">${e.name}</div>
-          <div class="ex-detail">${e.detail} — <em>${e.muscle}</em></div>
+          <div class="ex-name">${escapeHTML(e.name)}</div>
+          <div class="ex-detail">${escapeHTML(e.detail)} — <em>${escapeHTML(e.muscle)}</em></div>
         </div>
-        <button class="ex-timer-btn" title="Start timer" data-name="${e.name}" data-work="40" data-rest="20">▶</button>
+        <button class="ex-timer-btn" title="Start timer" data-name="${escapeHTML(e.name)}" data-work="40" data-rest="20">▶</button>
       </li>`).join('');
     return `
       <div class="day-card">
-        <div class="day-card-head"><span class="day-name">${day.day}</span><span class="day-type">${day.type}</span></div>
+        <div class="day-card-head"><span class="day-name">${escapeHTML(day.day)}</span><span class="day-type">${escapeHTML(day.type)}</span></div>
         <div class="day-card-body"><ul class="exercise-list">${exHtml}</ul></div>
       </div>`;
   }).join('');
 
   const tipsHtml = tips.map(t => `
     <div class="tip-card">
-      <span class="tip-icon">${t.icon}</span>
-      <div class="tip-text"><strong>${t.title}</strong>${t.text}</div>
+      <span class="tip-icon">${escapeHTML(t.icon)}</span>
+      <div class="tip-text"><strong>${escapeHTML(t.title)}</strong>${escapeHTML(t.text)}</div>
     </div>`).join('');
 
   const html = `<div class="card">
     <div class="plan-header">
       <div>
         <h2>💪 ${escapeHTML(p.name)}'s Workout Plan</h2>
-        <p class="muted" style="font-size:13px;margin-top:4px">${workoutPlan.label} — ${workoutPlan.focus}</p>
+        <p class="muted" style="font-size:13px;margin-top:4px">${escapeHTML(workoutPlan.label)} — ${escapeHTML(workoutPlan.focus)}</p>
       </div>
       <div class="plan-meta">
         <span class="badge badge-blue">${GLABELS[p.goal] || p.goal}</span>
@@ -348,10 +354,19 @@ function renderWorkoutTab(plan) {
 
   const completeBtn = wo.querySelector('#complete-workout-btn');
   if (completeBtn) {
-    const key = new Date().toISOString().split('T')[0];
+    const key = localDateKey();
     const completed = JSON.parse(localStorage.getItem('gainz_workouts') || '{}');
-    if (completed[key]) completeBtn.classList.add('completed');
+    // The plan starts on Monday; JS getDay() starts on Sunday.
+    const todayPlan = workoutPlan.plan[(new Date().getDay() + 6) % 7];
+    if (todayPlan && todayPlan.isRest) {
+      completeBtn.disabled = true;
+      completeBtn.textContent = '😴 REST DAY — NO SESSION TODAY';
+    } else if (completed[key]) {
+      completeBtn.classList.add('completed');
+      completeBtn.textContent = '✓ WORKOUT COMPLETED';
+    }
     completeBtn.addEventListener('click', () => {
+      if (completeBtn.disabled) return;
       const data = JSON.parse(localStorage.getItem('gainz_workouts') || '{}');
       data[key] = { completedAt: new Date().toISOString(), goal: p.goal };
       localStorage.setItem('gainz_workouts', JSON.stringify(data));
@@ -376,23 +391,27 @@ function renderDietTab(plan) {
     ? `<span style="color:var(--accent-y)">⚠ ${dietPlan.gap} kcal below target — add a protein shake or snack.</span>`
     : `<span style="color:var(--accent-g)">✔ Within target (${Math.abs(dietPlan.gap)} kcal over).</span>`;
 
+  const warnHtml = (dietPlan.warnings || []).map(w =>
+    `<div class="diet-warning" style="margin:0 0 12px;padding:10px 14px;border-radius:8px;border:1px solid var(--accent-y);color:var(--accent-y);font-size:13px">⚠ ${escapeHTML(w)}</div>`
+  ).join('');
+
   const mealsHtml = dietPlan.meals.map(m => `
     <div class="meal-card">
-      <div class="meal-card-head"><span class="meal-time">${m.label} · ${m.time}</span><span class="meal-cals">${m.cal} kcal</span></div>
-      <div class="meal-name">${m.name}</div>
-      <div class="meal-desc">${m.desc}</div>
+      <div class="meal-card-head"><span class="meal-time">${escapeHTML(m.label)} · ${escapeHTML(m.time)}</span><span class="meal-cals">${escapeHTML(m.cal)} kcal</span></div>
+      <div class="meal-name">${escapeHTML(m.name)}</div>
+      <div class="meal-desc">${escapeHTML(m.desc)}</div>
       <div class="macro-row">
-        <span class="macro-chip macro-p">P: ${m.p}g</span>
-        <span class="macro-chip macro-c">C: ${m.c}g</span>
-        <span class="macro-chip macro-f">F: ${m.f}g</span>
+        <span class="macro-chip macro-p">P: ${escapeHTML(m.p)}g</span>
+        <span class="macro-chip macro-c">C: ${escapeHTML(m.c)}g</span>
+        <span class="macro-chip macro-f">F: ${escapeHTML(m.f)}g</span>
       </div>
-      <div class="budget-note">🛒 Budget: <strong>${m.budget.charAt(0).toUpperCase()+m.budget.slice(1)}</strong></div>
+      <div class="budget-note">🛒 Budget: <strong>${escapeHTML(String(m.budget || '').charAt(0).toUpperCase() + String(m.budget || '').slice(1))}</strong></div>
     </div>`).join('');
 
   const grocHtml = Object.entries(dietPlan.grocery).map(([cat, items]) => `
     <div class="grocery-cat">
-      <div class="grocery-cat-title">${cat}</div>
-      <ul class="grocery-items">${items.map(i => `<li>${i}</li>`).join('')}</ul>
+      <div class="grocery-cat-title">${escapeHTML(cat)}</div>
+      <ul class="grocery-items">${items.map(i => `<li>${escapeHTML(i)}</li>`).join('')}</ul>
     </div>`).join('');
 
   // Water tracker
@@ -422,6 +441,7 @@ function renderDietTab(plan) {
       <div class="stat-card"><div class="stat-val">${dietPlan.macros.fat}g</div><div class="stat-lbl">Fat/day</div></div>
     </div>
     <div style="margin-bottom:16px;font-size:13px">${gapNote}</div>
+    ${warnHtml}
 
     <!-- Water Tracker -->
     <div class="water-tracker">
@@ -569,9 +589,9 @@ function renderInsightsTab(plan) {
   /* ── AI insight cards ── */
   const cardsHtml = aiCards.map(c => `
     <div class="insight-card" style="border-left: 3px solid ${c.accent}">
-      <div class="insight-icon">${c.icon}</div>
+      <div class="insight-icon">${escapeHTML(c.icon)}</div>
       <div class="insight-body">
-        <div class="insight-title">${c.title}</div>
+        <div class="insight-title">${escapeHTML(c.title)}</div>
         <div class="insight-text">${c.text}</div>
       </div>
     </div>`).join('');
@@ -664,7 +684,7 @@ function collectProgressForCoach() {
   return {
     weightEntries: (progressLog || []).slice(-12),
     completedWorkoutDates: Object.keys(workouts).slice(-30),
-    streak: Number(document.getElementById('streak-value')?.textContent || 0) || 0
+    streak: parseInt(document.getElementById('streak-count')?.textContent, 10) || 0
   };
 }
 
@@ -781,7 +801,7 @@ function openTimer(name, workSec, restSec) {
   modal.innerHTML = `
     <div class="timer-backdrop"></div>
     <div class="timer-box">
-      <div class="timer-name">${name}</div>
+      <div class="timer-name">${escapeHTML(name)}</div>
       <div class="timer-phase" id="timer-phase">WORK</div>
       <div class="timer-display" id="timer-display">00:${String(workSec).padStart(2,'0')}</div>
       <div class="timer-ring-wrap">
@@ -886,7 +906,7 @@ function openTimer(name, workSec, restSec) {
 let progressLog = JSON.parse(localStorage.getItem('gainz_progress') || '[]');
 
 const logDateInput = document.getElementById('log-date');
-if (logDateInput) logDateInput.value = new Date().toISOString().split('T')[0];
+if (logDateInput) logDateInput.value = localDateKey();
 
 document.getElementById('log-btn').addEventListener('click', () => {
   const date   = document.getElementById('log-date').value;
@@ -999,20 +1019,23 @@ function renderStreakCalendar() {
   const days   = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
-    days.push(d.toISOString().split('T')[0]);
+    days.push(localDateKey(d));
   }
+  const todayKey = localDateKey(today);
   wrap.innerHTML = days.map(d => {
-    const cls = logged.has(d) ? 'cal-day logged' : d === today.toISOString().split('T')[0] ? 'cal-day today' : 'cal-day';
+    const cls = logged.has(d) ? 'cal-day logged' : d === todayKey ? 'cal-day today' : 'cal-day';
     return `<div class="${cls}" title="${d}"></div>`;
   }).join('');
 }
 
 function updateStreak() {
-  const today = new Date().toISOString().split('T')[0];
   const workouts = JSON.parse(localStorage.getItem('gainz_workouts') || '{}');
   const dates = new Set([...progressLog.map(e => e.date), ...Object.keys(workouts)]);
-  let streak = 0, cur = new Date(today);
-  while (dates.has(cur.toISOString().split('T')[0])) { streak++; cur.setDate(cur.getDate() - 1); }
+  let streak = 0;
+  const cur = new Date();
+  // If today has no entry yet, the streak is still alive from yesterday.
+  if (!dates.has(localDateKey(cur))) cur.setDate(cur.getDate() - 1);
+  while (dates.has(localDateKey(cur))) { streak++; cur.setDate(cur.getDate() - 1); }
   const el = document.getElementById('streak-count');
   if (el) el.textContent = `${streak} day${streak !== 1 ? 's' : ''}`;
 }

@@ -7,7 +7,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const MAX_BODY = 20000;
+const MAX_BODY = 60000;            // plan + exercise/meal lists + chat history can exceed 20 KB
+const RATE_LIMIT = { windowMs: 60000, max: 20 };   // AI requests per IP per minute
+const PUBLIC_FILES = new Set(['index.html','style.css','app.js','ai-engine.js','auth.js','supabase-config.js']);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -38,6 +40,19 @@ function send(res, status, data, contentType = 'application/json; charset=utf-8'
 
 function safeText(value, max = 1200) {
   return String(value ?? '').replace(/\u0000/g, '').slice(0, max);
+}
+
+const rateBuckets = new Map();
+function rateLimited(req) {
+  const ip = req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const hits = (rateBuckets.get(ip) || []).filter(t => now - t < RATE_LIMIT.windowMs);
+  hits.push(now);
+  rateBuckets.set(ip, hits);
+  if (rateBuckets.size > 5000) {                       // keep memory bounded
+    for (const [k, v] of rateBuckets) if (!v.some(t => now - t < RATE_LIMIT.windowMs)) rateBuckets.delete(k);
+  }
+  return hits.length > RATE_LIMIT.max;
 }
 
 function loadDotEnv(file = path.join(ROOT, '.env')) {
@@ -285,12 +300,9 @@ function serveStatic(req, res) {
 
   if (pathname === '/') pathname = '/index.html';
 
-  const requestedName = path.basename(pathname);
-  if (
-    requestedName === '.env' ||
-    requestedName.startsWith('.env.') ||
-    requestedName.startsWith('.')
-  ) {
+  // Only serve the front-end files. Server code, SQL, package.json and dotfiles stay private.
+  const requestedName = pathname.replace(/^\/+/, '');
+  if (!PUBLIC_FILES.has(requestedName)) {
     return send(res, 404, { error: 'Not found' });
   }
 
@@ -329,6 +341,10 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  if (req.method === 'POST' && (route === '/api/test-ai' || route === '/api/coach') && rateLimited(req)) {
+    return send(res, 429, { error: 'Too many requests. Please wait a minute and try again.' });
+  }
+
   if (req.method === 'POST' && route === '/api/test-ai') {
     return testGemini()
       .then(result => send(res, 200, result))
@@ -340,8 +356,9 @@ const server = http.createServer((req, res) => {
     let tooLarge = false;
 
     req.on('data', chunk => {
+      if (tooLarge) return;                 // stop buffering once the limit is exceeded
       raw += chunk;
-      if (raw.length > MAX_BODY) tooLarge = true;
+      if (raw.length > MAX_BODY) { tooLarge = true; raw = ''; }
     });
 
     req.on('end', async () => {

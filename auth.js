@@ -128,8 +128,10 @@
         return;
       }
       hideGate();
-      signOutButton?.classList.remove('hidden');
-      signOutButton.textContent = user.email ? `SIGN OUT · ${user.email}` : 'SIGN OUT';
+      if (signOutButton) {
+        signOutButton.classList.remove('hidden');
+        signOutButton.textContent = user.email ? `SIGN OUT · ${user.email}` : 'SIGN OUT';
+      }
     } catch (err) {
       showGate(`Could not load your cloud data: ${err.message}. Check the database tables, grants and RLS policies.`, true);
     } finally {

@@ -1,7 +1,8 @@
 /**
  * GAINZ — AI Engine
  * All plan-generation logic lives here.
- * No external API required — rule-based AI with weighted personalisation.
+ * Rule-based planning (formulas + lookup tables); no external API is needed here.
+ * The conversational AI coach lives in server.js (Gemini) and is separate from this file.
  */
 
 'use strict';
@@ -32,10 +33,22 @@ const GOAL_ADJUSTMENTS = {
   flexibility:    0
 };
 
+// Safety floor: never prescribe fewer calories than commonly accepted minimums.
+const MIN_CALORIES = { female: 1200, male: 1500, other: 1200 };
+function minCalories(gender) { return MIN_CALORIES[gender] || 1200; }
+
 function calcTDEE(profile) {
   const bmr = calcBMR(profile.weight, profile.height, profile.age, profile.gender);
   const tdee = bmr * (ACTIVITY_MULTIPLIERS[profile.activity] || 1.55);
-  return Math.round(tdee + (GOAL_ADJUSTMENTS[profile.goal] || 0));
+  const target = Math.round(tdee + (GOAL_ADJUSTMENTS[profile.goal] || 0));
+  return Math.max(target, minCalories(profile.gender));
+}
+
+// True when the safety floor raised the calorie target above the raw goal-based value.
+function calorieFloorApplied(profile) {
+  const bmr = calcBMR(profile.weight, profile.height, profile.age, profile.gender);
+  const raw = Math.round(bmr * (ACTIVITY_MULTIPLIERS[profile.activity] || 1.55) + (GOAL_ADJUSTMENTS[profile.goal] || 0));
+  return raw < minCalories(profile.gender);
 }
 
 function calcMacros(calories, goal) {
@@ -449,27 +462,39 @@ function generateDietPlan(profile, targetCalories, macros) {
   const dietType = profile.diet_type;
   const budgetLevel = profile.budget;
 
+  // Meals are matched on their text because only some are explicitly tagged.
+  const NON_HALAL   = /\b(pork|bacon|ham|sausage|salami|pepperoni|lard|gelatin|wine|beer|rum|sake|mirin)\b/i;
+  const DAIRY       = /\b(milk|yoghurt|yogurt|cheese|paneer|feta|cottage|ghee|butter|labneh|tzatziki|cream|curd|raita|lassi|kefir|whey|halloumi|mozzarella|parmesan|ricotta|custard)\b/i;
+  const PLANT_MILK  = /\b(coconut|almond|soy|oat|rice)\s+(milk|yoghurt|yogurt|cream)\b/i;
+
+  function matchesDiet(m) {
+    if (!dietType || dietType === 'none') return true;
+    const text = `${m.name} ${m.desc}`;
+    if (dietType === 'halal')       return m.tags.includes('halal') || !NON_HALAL.test(text);
+    if (dietType === 'lactose_free') return m.tags.includes('vegan') || !DAIRY.test(text.replace(PLANT_MILK, ''));
+    return m.tags.includes(dietType);              // vegetarian, vegan, gluten_free
+  }
+
+  const warnings = [];
+
   function filterMeals(arr) {
-    return arr.filter(m => {
-      if (dietType && dietType !== 'none') {
-        if (dietType === 'lactose_free') return true;
-        if (!m.tags.includes(dietType)) return false;
-      }
-      if (budgetLevel === 'low' && m.budget === 'high') return false;
-      return true;
-    });
+    return arr.filter(m => matchesDiet(m) && !(budgetLevel === 'low' && m.budget === 'high'));
   }
 
-  function pick(arr) {
+  function pick(arr, slot) {
     const filtered = filterMeals(arr);
-    const pool = filtered.length ? filtered : arr;
-    return pool[Math.floor(Math.random() * pool.length)];
+    if (filtered.length) return filtered[Math.floor(Math.random() * filtered.length)];
+    // Budget is a soft preference: relax it first, but never relax the dietary restriction silently.
+    const dietOnly = arr.filter(matchesDiet);
+    if (dietOnly.length) return dietOnly[Math.floor(Math.random() * dietOnly.length)];
+    warnings.push(`No ${slot} option in this cuisine fully matches your "${DIET_RESTRICTION_LABELS[dietType] || dietType}" preference — please check the ingredients or try the Mixed cuisine.`);
+    return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  const breakfast = pick(db.breakfast);
-  const lunch     = pick(db.lunch);
-  const dinner    = pick(db.dinner);
-  const snack     = pick(db.snack);
+  const breakfast = pick(db.breakfast, 'breakfast');
+  const lunch     = pick(db.lunch,     'lunch');
+  const dinner    = pick(db.dinner,    'dinner');
+  const snack     = pick(db.snack,     'snack');
 
   const totalCal = breakfast.cal + lunch.cal + dinner.cal + snack.cal;
   const gap      = targetCalories - totalCal;
@@ -485,6 +510,7 @@ function generateDietPlan(profile, targetCalories, macros) {
     targetCalories,
     gap,
     macros,
+    warnings,
     grocery: GROCERY_DB[profile.cuisine] || GROCERY_DB.mixed
   };
 }
@@ -501,6 +527,8 @@ function generateTips(profile, calories) {
   if (profile.goal === 'endurance')    tips.push({ icon:'🩺', title:'Zone-2 Cardio',       text:'Keep 60–70% of your max heart rate for long steady-state sessions for the best endurance base.' });
   if (profile.goal === 'flexibility')  tips.push({ icon:'🌡️', title:'Warm Before Stretch', text:'Static stretching on cold muscles increases injury risk. Always warm up for 5–10 min first.' });
 
+  if (calorieFloorApplied(profile)) tips.push({ icon:'⚠️', title:'Calorie Floor Applied', text:`Your goal would need fewer than ${minCalories(profile.gender)} kcal/day, which is below a safe minimum, so your target was raised to ${calories} kcal. Lose weight gradually and speak to a doctor or dietitian.` });
+
   if (profile.budget === 'low')    tips.push({ icon:'🛒', title:'Budget Protein Hacks',  text:'Eggs, lentils, canned chickpeas & frozen fish are the cheapest complete proteins — buy in bulk.' });
   if (profile.equipment === 'none') tips.push({ icon:'🏠', title:'Home is Your Gym',      text:'A chair, wall, and your bodyweight is enough to build real strength. Consistency beats equipment.' });
 
@@ -512,6 +540,7 @@ function generateTips(profile, calories) {
     tips.push({ icon:'🧘', title:'Exercise & Mental Health', text:'Even a 20-min walk raises endorphins and reduces cortisol. Prioritise movement for stress relief.' });
   }
 
+  tips.sort((a, b) => (b.title === 'Calorie Floor Applied') - (a.title === 'Calorie Floor Applied'));
   return tips.slice(0, 6);
 }
 
